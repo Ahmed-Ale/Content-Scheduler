@@ -11,7 +11,7 @@ use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Throwable;
 
-class ExceptionHandler
+class Handler
 {
     public function render(Throwable $e, Request $request): ?JsonResponse
     {
