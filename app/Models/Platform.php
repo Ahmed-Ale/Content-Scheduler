@@ -15,12 +15,17 @@ class Platform extends Model
         'name',
         'type',
     ];
-
-    public function user(): BelongsToMany
+    public function jsonSerialize(): object
     {
-        return $this->belongsToMany(User::class, 'platform_user')
-            ->withPivot('user_id')
-            ->withTimestamps();
+        return (object) [
+            'id' => $this->id,
+            'name' => $this->name,
+            'type' => $this->type,
+        ];
+    }
+    public function users(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'platform_user')->withTimestamps();
     }
     public function posts()
     {
