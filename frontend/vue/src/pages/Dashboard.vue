@@ -117,12 +117,14 @@
                                         Edit
                                     </router-link>
                                     <button
+                                        v-if="post.status !== 'published'"
                                         class="btn btn-sm btn-outline-danger ms-2"
                                         @click="showDeleteModal(post.id, post.title)"
                                         aria-label="Delete post"
                                     >
                                         Delete
                                     </button>
+                                    <span v-else class="ms-2 text-muted">Published</span>
                                 </div>
                             </div>
                         </div>
@@ -241,9 +243,9 @@ export default {
                 this.error = null;
                 this.deleteModal.hide();
             } catch (err) {
-                this.error = err.status === 403
-                    ? 'You are not authorized to delete this post.'
-                    : 'Failed to delete post. Please try again.';
+                this.error = err.response?.status === 403
+                    ? 'Published posts cannot be deleted.'
+                    : err.response?.data?.message || 'Failed to delete post. Please try again.';
                 this.deleteModal.hide();
             }
         },
