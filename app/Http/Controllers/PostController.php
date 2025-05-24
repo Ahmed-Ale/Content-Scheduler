@@ -9,7 +9,6 @@ use App\Models\Post;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -27,11 +26,7 @@ class PostController extends Controller
         }
 
         if ($request->filled('date')) {
-            try {
-                $query->whereDate('scheduled_time', Carbon::parse($request->date)->toDateString());
-            } catch (\Exception $e) {
-                // Invalid date format; skip filter
-            }
+            $query->whereDate('scheduled_time', Carbon::parse($request->date)->toDateString());
         }
 
         $posts = $query->get();
@@ -52,14 +47,18 @@ class PostController extends Controller
 
     public function store(CreatePostRequest $request)
     {
-        Log::info($request);
         $validated = $request->validated();
 
-        $dailyPosts = Post::where('user_id', Auth::id())
-            ->whereDate('scheduled_time', Carbon::parse($validated['scheduled_time'])->toDateString())
-            ->count();
-        if ($dailyPosts >= 10) {
-            return ApiResponse::error(Response::HTTP_TOO_MANY_REQUESTS, 'Daily post limit reached');
+        if($validated['scheduled_time']) {
+            $dailyPosts = Post::where('user_id', Auth::id())
+                ->whereDate('scheduled_time', Carbon::parse($validated['scheduled_time'])->toDateString())
+                ->count();
+            if ($dailyPosts >= 10) {
+                return ApiResponse::error(Response::HTTP_TOO_MANY_REQUESTS, 'Daily post limit reached');
+            }
+            $validated['status'] = 'scheduled';
+        } else {
+            $validated['status'] = 'draft';
         }
 
         $imageUrl = null;
@@ -72,7 +71,7 @@ class PostController extends Controller
             'content' => $validated['content'],
             'image_url' => $imageUrl,
             'scheduled_time' => $validated['scheduled_time'],
-            'status' => 'scheduled',
+            'status' => $validated['status'],
             'user_id' => Auth::id(),
         ]);
 
@@ -89,27 +88,20 @@ class PostController extends Controller
             return ApiResponse::error(Response::HTTP_FORBIDDEN, 'Unauthorized to update this post');
         }
 
-        Log::info('Update request data:', $request->all());
-        Log::info('Request files:', $request->allFiles());
-
         $validated = $request->validated();
 
-        $imageUrl = $post->image_url; // Preserve existing image
+        $imageUrl = $post->image_url;
         if ($request->hasFile('image') && $request->file('image')->isValid()) {
             try {
-                // Delete old image if it exists
                 if ($post->image_url) {
                     Storage::disk('public')->delete($post->image_url);
-                    Log::info('Deleted old image:', ['path' => $post->image_url]);
                 }
                 $imageUrl = $request->file('image')->store('images', 'public');
-                Log::info('New image stored successfully:', ['path' => $imageUrl]);
             } catch (\Exception $e) {
-                Log::error('Failed to store image:', ['error' => $e->getMessage()]);
-                return ApiResponse::error(Response::HTTP_INTERNAL_SERVER_ERROR, 'Failed to store image');
+                return ApiResponse::error(Response::HTTP_INTERNAL_SERVER_ERROR, 'Failed to store image', [
+                    'error' => $e->getMessage(),
+                ]);
             }
-        } else {
-            Log::warning('No valid image file uploaded');
         }
 
         $post->update([
@@ -117,7 +109,7 @@ class PostController extends Controller
             'content' => $validated['content'],
             'image_url' => $imageUrl,
             'scheduled_time' => $validated['scheduled_time'],
-            'status' => 'scheduled',
+            'status' => $validated['scheduled_time'] ? 'scheduled' : 'draft',
         ]);
 
         $post->platforms()->sync($validated['platforms'], ['platform_status' => 'pending']);
@@ -135,7 +127,6 @@ class PostController extends Controller
 
         if ($post->image_url) {
             Storage::disk('public')->delete($post->image_url);
-            Log::info('Deleted post image:', ['path' => $post->image_url]);
         }
 
         $post->platforms()->detach();
