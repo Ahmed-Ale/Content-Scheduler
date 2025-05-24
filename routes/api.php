@@ -3,20 +3,24 @@
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\PlatformController;
 use App\Http\Controllers\PostController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::controller(AuthController::class)->prefix('/auth')->group(function () {
     Route::post('/register', 'register');
     Route::post('/login', 'login');
-    Route::post('/logout', 'logout');
+    Route::post('/logout', 'logout')->middleware('auth:sanctum');
 });
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/user', function (Request $request) {
-        return $request->user();
+    Route::controller(ProfileController::class)->group(function () {
+        Route::get('/user', 'show');
+        Route::put('/user', 'update');
+        Route::delete('/user', 'destroy');
     });
+
     Route::apiResource('/posts', PostController::class);
+    Route::get('/analytics', [PostController::class, 'analytics']);
 
     Route::get('/platforms', [PlatformController::class, 'index']);
     Route::post('/platforms/toggle', [PlatformController::class, 'toggle']);
