@@ -124,6 +124,9 @@ class PostController extends Controller
         if ($post->user_id !== Auth::id()) {
             return ApiResponse::error(Response::HTTP_FORBIDDEN, 'Unauthorized to delete this post');
         }
+        if ($post->status === 'published') {
+            return ApiResponse::error(Response::HTTP_FORBIDDEN, 'Cannot delete a published post');
+        }
 
         if ($post->image_url) {
             Storage::disk('public')->delete($post->image_url);
