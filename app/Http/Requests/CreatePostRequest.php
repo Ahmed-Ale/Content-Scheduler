@@ -24,7 +24,7 @@ class CreatePostRequest extends FormRequest
         return [
             'title' => 'required|string|max:255',
             'content' => 'required|string',
-            'scheduled_time' => 'required|date|after:now',
+            'scheduled_time' => 'nullable|date|after:now',
             'platforms' => 'required|array|min:1',
             'platforms.*' => 'exists:platforms,id',
             'image' => 'nullable|image|max:2048',
