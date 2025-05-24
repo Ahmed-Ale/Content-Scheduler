@@ -11,7 +11,7 @@ class PlatformToggleRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return auth()->check();
     }
 
     /**
@@ -22,8 +22,8 @@ class PlatformToggleRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'platform_id' => 'required|exists:platforms,id',
-            'active' => 'required|boolean',
+            'platform_id' => ['required', 'integer', 'exists:platforms,id'],
+            'active' => ['required', 'boolean'],
         ];
     }
 }
