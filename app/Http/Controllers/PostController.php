@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
+use League\Csv\Writer;
 use Symfony\Component\HttpFoundation\Response;
 
 class PostController extends Controller
@@ -196,5 +197,70 @@ class PostController extends Controller
         });
 
         return ApiResponse::success(Response::HTTP_OK, 'Analytics data retrieved', $analytics);
+    }
+    public function exportAnalytics()
+    {
+        if (!Auth::check()) {
+            return response()->json([
+                'status' => Response::HTTP_UNAUTHORIZED,
+                'message' => 'Unauthorized',
+            ], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $userId = Auth::id();
+        $cacheKey = "user_analytics_{$userId}";
+
+        // Reuse analytics logic
+        $analytics = Cache::remember($cacheKey, now()->addHours(1), function () use ($userId) {
+            $posts = Post::where('user_id', $userId)
+                ->with(['platforms' => function ($query) {
+                    $query->select('platforms.id', 'platforms.name', 'platforms.type', 'post_platform.platform_status');
+                }])
+                ->get();
+
+            $postsPerPlatform = $posts->flatMap->platforms
+                ->groupBy('name')
+                ->map->count();
+
+            $totalPosts = $posts->count();
+            $publishedPosts = $posts->where('status', 'published')->count();
+            $successRate = $totalPosts > 0 ? ($publishedPosts / $totalPosts) * 100 : 0;
+
+            return [
+                'posts_per_platform' => $postsPerPlatform->toArray(), // Ensure array for CSV
+                'success_rate' => round($successRate, 2),
+                'scheduled_count' => $posts->where('status', 'scheduled')->count(),
+                'published_count' => $publishedPosts,
+                'failed_count' => $posts->where('status', 'failed')->count(),
+            ];
+        });
+
+        // Handle empty analytics data
+        if (empty($analytics['posts_per_platform'])) {
+            return response()->json([
+                'status' => Response::HTTP_OK,
+                'message' => 'No analytics data available for export',
+            ], Response::HTTP_OK);
+        }
+
+        // Generate CSV
+        $csv = Writer::createFromString();
+        $csv->insertOne(['Platform', 'Post Count', 'Success Rate (%)', 'Scheduled', 'Published', 'Failed']);
+
+        foreach ($analytics['posts_per_platform'] as $platform => $count) {
+            $csv->insertOne([
+                $platform,
+                $count,
+                $analytics['success_rate'],
+                $analytics['scheduled_count'],
+                $analytics['published_count'],
+                $analytics['failed_count'],
+            ]);
+        }
+
+        return response($csv->toString(), 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="analytics_export_' . now()->format('Y-m-d_H-i-s') . '.csv"',
+        ]);
     }
 }
