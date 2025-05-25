@@ -85,6 +85,7 @@
             </div>
         </div>
         <div class="text-center mt-3">
+            <button @click="exportAnalytics" class="btn btn-secondary me-2" :disabled="isLoading || !Object.keys(analyticsData.posts_per_platform).length">Export as CSV</button>
             <router-link to="/dashboard" class="btn btn-primary">Back to Dashboard</router-link>
         </div>
     </div>
@@ -193,7 +194,9 @@ export default {
             this.error = null;
             try {
                 const response = await api.getAnalytics();
-                console.log('Analytics Response:', response); // Debug log
+                if (!response || typeof response !== 'object') {
+                    throw new Error('Invalid analytics response');
+                }
                 this.analyticsData = {
                     posts_per_platform: response.posts_per_platform || {},
                     success_rate: response.success_rate || 0,
@@ -203,7 +206,6 @@ export default {
                     total: (response.published_count || 0) + (response.failed_count || 0),
                 };
             } catch (err) {
-                console.error('Analytics Error:', err); // Debug log
                 this.error = err.message || 'Failed to load analytics data. Please try again.';
                 this.analyticsData = {
                     posts_per_platform: {},
@@ -213,6 +215,39 @@ export default {
                     failed_count: 0,
                     total: 0,
                 };
+            } finally {
+                this.isLoading = false;
+            }
+        },
+        async exportAnalytics() {
+            this.isLoading = true;
+            this.error = null;
+            try {
+                const response = await fetch(`${api.baseUrl}/analytics/export`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'text/csv',
+                        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+                    },
+                    credentials: 'include',
+                });
+
+                if (!response.ok) {
+                    const json = await response.json();
+                    throw new Error(json.message || 'Failed to export analytics');
+                }
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', `analytics_export_${new Date().toISOString().replace(/[:.]/g, '-')}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                window.URL.revokeObjectURL(url);
+            } catch (err) {
+                this.error = err.message || 'Failed to export analytics. Please try again.';
             } finally {
                 this.isLoading = false;
             }
