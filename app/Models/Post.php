@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 class Post extends Model
 {
@@ -32,5 +34,37 @@ class Post extends Model
         return $this->belongsToMany(Platform::class, 'post_platform')
             ->withPivot('platform_status')
             ->withTimestamps();
+    }
+
+    protected static function booted()
+    {
+        static::created(function ($post) {
+            $userId = $post->user_id;
+            $date = $post->scheduled_time ? Carbon::parse($post->scheduled_time)->toDateString() : null;
+            Cache::tags(["user_posts_{$userId}"])->flush();
+            Cache::tags(["user_analytics_{$userId}"])->flush();
+            if ($date) {
+                Cache::forget("user_post_count_{$userId}_{$date}");
+            }
+            Cache::forget('due_posts');
+        });
+
+        static::updated(function ($post) {
+            $userId = $post->user_id;
+            Cache::tags(["user_posts_{$userId}"])->flush();
+            Cache::tags(["user_analytics_{$userId}"])->flush();
+            Cache::forget('due_posts');
+        });
+
+        static::deleted(function ($post) {
+            $userId = $post->user_id;
+            $date = $post->scheduled_time ? Carbon::parse($post->scheduled_time)->toDateString() : null;
+            Cache::tags(["user_posts_{$userId}"])->flush();
+            Cache::tags(["user_analytics_{$userId}"])->flush();
+            if ($date) {
+                Cache::forget("user_post_count_{$userId}_{$date}");
+            }
+            Cache::forget('due_posts');
+        });
     }
 }
