@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Jobs\PublishPostJob;
 use App\Models\Post;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class PublishPosts extends Command
@@ -16,11 +17,13 @@ class PublishPosts extends Command
     {
         Log::info('Running posts:publish command');
 
-        $duePosts = Post::where('status', 'scheduled')
-            ->whereNotNull('scheduled_time')
-            ->where('scheduled_time', '<=', now())
-            ->with('platforms')
-            ->get();
+        $duePosts = Cache::remember('due_posts', now()->addMinutes(5), function () {
+            return Post::where('status', 'scheduled')
+                ->whereNotNull('scheduled_time')
+                ->where('scheduled_time', '<=', now())
+                ->with('platforms')
+                ->get();
+        });
 
         if ($duePosts->isEmpty()) {
             Log::info('No due posts found');
@@ -34,6 +37,8 @@ class PublishPosts extends Command
             PublishPostJob::dispatch($post)->onQueue('publishing');
             Log::info('Dispatched PublishPostJob', ['post_id' => $post->id]);
         }
+
+        Cache::forget('due_posts');
 
         $message = "Dispatched {$duePosts->count()} post(s) for publishing.";
         Log::info($message);
