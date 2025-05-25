@@ -16,6 +16,8 @@ return new class extends Migration
             $table->foreignId('platform_id')->constrained()->onDelete('cascade');
             $table->string('platform_status')->default('pending');
             $table->primary(['post_id', 'platform_id']);
+            $table->index('post_id');
+            $table->index('platform_id');
             $table->timestamps();
         });
     }
