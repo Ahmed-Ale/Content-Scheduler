@@ -226,10 +226,7 @@ export default {
             }
         },
         async logout() {
-            try {
-                await api.post('/auth/logout');
-            } catch (err) {
-            }
+            await api.post('/auth/logout');
             this.authStore.setToken(null);
             this.$router.push('/login');
         },

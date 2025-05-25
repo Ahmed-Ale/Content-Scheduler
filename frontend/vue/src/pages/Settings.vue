@@ -73,7 +73,7 @@ export default {
         async togglePlatform(platformId, active) {
             this.error = null;
             try {
-                const response = await api.togglePlatform(platformId, active);
+                await api.togglePlatform(platformId, active);
                 const platform = this.platforms.find(p => p.id === platformId);
                 if (platform) {
                     platform.active = active;

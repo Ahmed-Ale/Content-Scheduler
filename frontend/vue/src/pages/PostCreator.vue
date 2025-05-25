@@ -162,10 +162,6 @@ export default {
                     dayjs(this.form.scheduled_time).tz('Europe/Tallinn', true).format('YYYY-MM-DD HH:mm:ss') : '');
                 this.form.platforms.forEach((id, index) => formData.append(`platforms[${index}]`, id));
 
-                // Log FormData contents for debugging
-                for (let [key, value] of formData.entries()) {
-                }
-
                 await api.createPost(formData);
                 this.$router.push('/dashboard');
             } catch (err) {
