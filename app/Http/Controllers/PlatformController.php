@@ -15,7 +15,7 @@ class PlatformController extends Controller
     public function index()
     {
         $user = Auth::user();
-        if (!$user) {
+        if (! $user) {
             return ApiResponse::error(Response::HTTP_UNAUTHORIZED, 'Unauthorized');
         }
 
@@ -60,6 +60,7 @@ class PlatformController extends Controller
             }
         } catch (\Exception $e) {
             DB::rollBack();
+
             return ApiResponse::error(Response::HTTP_INTERNAL_SERVER_ERROR, 'Failed to toggle platform');
         }
 

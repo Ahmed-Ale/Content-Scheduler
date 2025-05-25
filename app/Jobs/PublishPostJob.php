@@ -63,7 +63,7 @@ class PublishPostJob implements ShouldQueue
     {
         switch ($platform->id) {
             case 1:
-               // Platform 1 always succeeds
+                // Platform 1 always succeeds
                 return 'published';
             case 2:
                 // Platform 2: Fails if content exceeds 280 characters

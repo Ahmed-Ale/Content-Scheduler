@@ -29,17 +29,17 @@ class AuthTest extends TestCase
                 'message',
                 'data' => [
                     'user',
-                    'token'
-                ]
+                    'token',
+                ],
             ])
             ->assertJson([
                 'status' => Response::HTTP_CREATED,
-                'message' => 'User created successfully'
+                'message' => 'User created successfully',
             ]);
 
         $this->assertDatabaseHas('users', [
             'email' => 'john@example.com',
-            'name' => 'John Doe'
+            'name' => 'John Doe',
         ]);
     }
 
@@ -64,12 +64,12 @@ class AuthTest extends TestCase
                 'message',
                 'data' => [
                     'user',
-                    'token'
-                ]
+                    'token',
+                ],
             ])
             ->assertJson([
                 'status' => Response::HTTP_OK,
-                'message' => 'Logged in successfully'
+                'message' => 'Logged in successfully',
             ]);
     }
 
@@ -84,7 +84,7 @@ class AuthTest extends TestCase
             ->assertJson([
                 'status' => Response::HTTP_UNPROCESSABLE_ENTITY,
                 'message' => 'Invalid email or password',
-                'errors' => []
+                'errors' => [],
             ]);
     }
 }

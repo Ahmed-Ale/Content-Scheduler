@@ -11,10 +11,12 @@ class Platform extends Model
 {
     /** @use HasFactory<\Database\Factories\PlatformFactory> */
     use HasFactory;
+
     protected $fillable = [
         'name',
         'type',
     ];
+
     public function jsonSerialize(): object
     {
         return (object) [
@@ -23,10 +25,12 @@ class Platform extends Model
             'type' => $this->type,
         ];
     }
+
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'platform_user')->withTimestamps();
     }
+
     public function posts()
     {
         return $this->belongsToMany(Post::class, 'post_platform')

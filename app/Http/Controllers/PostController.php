@@ -164,7 +164,7 @@ class PostController extends Controller
 
     public function analytics()
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return ApiResponse::error(Response::HTTP_UNAUTHORIZED, 'Unauthorized');
         }
 

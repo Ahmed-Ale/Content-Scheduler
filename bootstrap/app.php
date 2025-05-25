@@ -24,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($request->ajax()) {
                 return true;
             }
+
             return false;
         });
     })->create();

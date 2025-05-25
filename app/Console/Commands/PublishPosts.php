@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Log;
 class PublishPosts extends Command
 {
     protected $signature = 'posts:publish';
+
     protected $description = 'Publish scheduled posts that are due';
 
     public function handle(): void
@@ -30,6 +31,7 @@ class PublishPosts extends Command
             if ($this->output) {
                 $this->info('No due posts to publish.');
             }
+
             return;
         }
 

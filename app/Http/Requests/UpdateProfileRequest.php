@@ -24,7 +24,7 @@ class UpdateProfileRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $this->user()->id],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email,'.$this->user()->id],
             'old_password' => ['nullable', 'string', 'required_with:password'],
             'password' => ['nullable', 'string', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
             'password_confirmation' => ['nullable', 'string'],

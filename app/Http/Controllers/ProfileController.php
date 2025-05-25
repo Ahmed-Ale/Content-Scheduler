@@ -28,7 +28,7 @@ class ProfileController extends Controller
 
         $validated = $request->validated();
 
-        if (isset($validated['password']) && !Hash::check($validated['old_password'], $user->password)) {
+        if (isset($validated['password']) && ! Hash::check($validated['old_password'], $user->password)) {
             return ApiResponse::error(Response::HTTP_UNPROCESSABLE_ENTITY, 'Current password is incorrect', [
                 'old_password' => ['Current password is incorrect'],
             ]);

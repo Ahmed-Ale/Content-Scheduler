@@ -38,7 +38,7 @@ class AuthController extends Controller
     {
         $validated = $request->validated();
 
-        if (!Auth::attempt(['email' => $validated['email'], 'password' => $validated['password']])) {
+        if (! Auth::attempt(['email' => $validated['email'], 'password' => $validated['password']])) {
             return ApiResponse::error(Response::HTTP_UNPROCESSABLE_ENTITY, 'Invalid email or password');
         }
 

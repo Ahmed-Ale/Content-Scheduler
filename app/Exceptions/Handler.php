@@ -29,17 +29,13 @@ class Handler
             : 500;
 
         return match (true) {
-            $e instanceof ValidationException =>
-            ApiResponse::validationError($e->errors()),
+            $e instanceof ValidationException => ApiResponse::validationError($e->errors()),
 
-            $e instanceof AuthenticationException =>
-            ApiResponse::unauthorized(),
+            $e instanceof AuthenticationException => ApiResponse::unauthorized(),
 
-            $e instanceof ModelNotFoundException =>
-            ApiResponse::notFound(class_basename($e->getModel())),
+            $e instanceof ModelNotFoundException => ApiResponse::notFound(class_basename($e->getModel())),
 
-            $e instanceof HttpException =>
-            ApiResponse::error($e->getStatusCode(), $e->getMessage()),
+            $e instanceof HttpException => ApiResponse::error($e->getStatusCode(), $e->getMessage()),
 
             default => ApiResponse::error(
                 $statusCode,
@@ -55,7 +51,7 @@ class Handler
             'exception' => get_class($e),
             'file' => $e->getFile(),
             'line' => $e->getLine(),
-            'trace' => $e->getTrace()
+            'trace' => $e->getTrace(),
         ];
     }
 }

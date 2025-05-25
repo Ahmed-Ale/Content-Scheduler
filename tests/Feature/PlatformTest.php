@@ -68,17 +68,14 @@ class PlatformTest extends TestCase
 
     public function test_it_validates_platform_toggle_request()
     {
-        // Arrange
         $user = User::factory()->create();
 
-        // Act
         $response = $this->actingAs($user, 'sanctum')
             ->postJson('/api/platforms/toggle', [
-                'platform_id' => 999, // Non-existent platform
-                'active' => 'invalid', // Invalid boolean
+                'platform_id' => 999,
+                'active' => 'invalid',
             ]);
 
-        // Assert
         $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY)
             ->assertJsonValidationErrors(['platform_id', 'active']);
     }
