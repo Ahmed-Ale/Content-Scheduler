@@ -9,7 +9,7 @@
         <div v-else-if="error" class="alert alert-danger">
             {{ error }}
         </div>
-        <div v-else-if="posts.length === 0" class="alert alert-info">
+        <div v-else-if="!Object.keys(analyticsData.posts_per_platform).length && analyticsData.total === 0" class="alert alert-info">
             No posts available for analytics. Create some posts to see insights.
         </div>
         <div v-else class="row">
@@ -25,14 +25,14 @@
                         />
                         <ul class="list-group list-group-flush mt-3">
                             <li
-                                v-for="(count, platform) in platformCounts"
+                                v-for="(count, platform) in analyticsData.posts_per_platform"
                                 :key="platform"
                                 class="list-group-item d-flex justify-content-between"
                             >
                                 <span>{{ platform }}</span>
                                 <span>{{ count }} post{{ count !== 1 ? 's' : '' }}</span>
                             </li>
-                            <li v-if="!Object.keys(platformCounts).length" class="list-group-item text-muted">
+                            <li v-if="!Object.keys(analyticsData.posts_per_platform).length" class="list-group-item text-muted">
                                 No platforms assigned to posts.
                             </li>
                         </ul>
@@ -50,8 +50,8 @@
                             :height="200"
                         />
                         <div class="mt-3 text-center">
-                            <p v-if="successRate.total > 0">
-                                Success Rate: {{ successRate.percentage }}% ({{ successRate.published }} Published, {{ successRate.failed }} Failed)
+                            <p v-if="analyticsData.total > 0">
+                                Success Rate: {{ analyticsData.success_rate }}% ({{ analyticsData.published_count }} Published, {{ analyticsData.failed_count }} Failed)
                             </p>
                             <p v-else class="text-muted">
                                 No published or failed posts.
@@ -73,11 +73,11 @@
                         <ul class="list-group list-group-flush mt-3">
                             <li class="list-group-item d-flex justify-content-between">
                                 <span>Scheduled</span>
-                                <span>{{ scheduledCount }} post{{ scheduledCount !== 1 ? 's' : '' }}</span>
+                                <span>{{ analyticsData.scheduled_count }} post{{ analyticsData.scheduled_count !== 1 ? 's' : '' }}</span>
                             </li>
                             <li class="list-group-item d-flex justify-content-between">
                                 <span>Published</span>
-                                <span>{{ publishedCount }} post{{ publishedCount !== 1 ? 's' : '' }}</span>
+                                <span>{{ analyticsData.published_count }} post{{ analyticsData.published_count !== 1 ? 's' : '' }}</span>
                             </li>
                         </ul>
                     </div>
@@ -115,7 +115,14 @@ export default {
     },
     data() {
         return {
-            posts: [],
+            analyticsData: {
+                posts_per_platform: {},
+                success_rate: 0,
+                scheduled_count: 0,
+                published_count: 0,
+                failed_count: 0,
+                total: 0,
+            },
             isLoading: false,
             error: null,
             chartOptions: {
@@ -147,17 +154,8 @@ export default {
         };
     },
     computed: {
-        platformCounts() {
-            const counts = {};
-            this.posts.forEach(post => {
-                post.platforms.forEach(platform => {
-                    counts[platform.name] = (counts[platform.name] || 0) + 1;
-                });
-            });
-            return counts;
-        },
         postsPerPlatformData() {
-            const counts = this.platformCounts;
+            const counts = this.analyticsData.posts_per_platform;
             return {
                 labels: Object.keys(counts).length ? Object.keys(counts) : ['No Platforms'],
                 datasets: [{
@@ -167,58 +165,61 @@ export default {
                 }],
             };
         },
-        successRate() {
-            const published = this.posts.filter(post => post.status === 'published').length;
-            const failed = this.posts.filter(post => post.status === 'failed').length;
-            const total = published + failed;
-            const percentage = total ? Math.round((published / total) * 100) : 0;
-            return { published, failed, total, percentage };
-        },
         successRateData() {
             return {
                 labels: ['Published', 'Failed'],
                 datasets: [{
                     label: 'Success Rate',
-                    data: this.successRate.total ? [this.successRate.published, this.successRate.failed] : [0, 0],
+                    data: this.analyticsData.total ? [this.analyticsData.published_count, this.analyticsData.failed_count] : [0, 0],
                     backgroundColor: ['#28a745', '#dc3545'],
                     hoverOffset: 20,
                 }],
             };
-        },
-        scheduledCount() {
-            return this.posts.filter(post => post.status === 'scheduled').length;
-        },
-        publishedCount() {
-            return this.posts.filter(post => post.status === 'published').length;
         },
         scheduledVsPublishedData() {
             return {
                 labels: ['Scheduled', 'Published'],
                 datasets: [{
                     label: 'Posts',
-                    data: [this.scheduledCount, this.publishedCount],
+                    data: [this.analyticsData.scheduled_count, this.analyticsData.published_count],
                     backgroundColor: ['#ffc107', '#28a745'],
                 }],
             };
         },
     },
     methods: {
-        async fetchPosts() {
+        async fetchAnalytics() {
             this.isLoading = true;
             this.error = null;
             try {
                 const response = await api.getAnalytics();
-                this.posts = response || [];
+                console.log('Analytics Response:', response); // Debug log
+                this.analyticsData = {
+                    posts_per_platform: response.posts_per_platform || {},
+                    success_rate: response.success_rate || 0,
+                    scheduled_count: response.scheduled_count || 0,
+                    published_count: response.published_count || 0,
+                    failed_count: response.failed_count || 0,
+                    total: (response.published_count || 0) + (response.failed_count || 0),
+                };
             } catch (err) {
-                this.error = 'Failed to load analytics data. Please try again.';
-                this.posts = [];
+                console.error('Analytics Error:', err); // Debug log
+                this.error = err.message || 'Failed to load analytics data. Please try again.';
+                this.analyticsData = {
+                    posts_per_platform: {},
+                    success_rate: 0,
+                    scheduled_count: 0,
+                    published_count: 0,
+                    failed_count: 0,
+                    total: 0,
+                };
             } finally {
                 this.isLoading = false;
             }
         },
     },
     mounted() {
-        this.fetchPosts();
+        this.fetchAnalytics();
     },
 };
 </script>
