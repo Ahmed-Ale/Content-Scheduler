@@ -97,10 +97,17 @@ class PostController extends Controller
             'user_id' => $userId,
         ]);
 
-        $post->platforms()->attach($validated['platforms'], ['platform_status' => 'pending']);
+        // Attach platforms with validation
+        if (!empty($validated['platforms'])) {
+            $userPlatforms = Auth::user()->platforms()->pluck('platform_id')->toArray();
+            $validPlatforms = array_intersect($validated['platforms'], $userPlatforms);
+            if (!empty($validPlatforms)) {
+                $post->platforms()->attach($validPlatforms, ['platform_status' => 'pending']);
+            }
+        }
 
-        // Invalidate daily post count cache
         Cache::forget("user_post_count_{$userId}_{$date}");
+        Cache::forget("user_platforms_{$userId}"); // Ensure platform data is fresh for analytics
 
         return ApiResponse::success(Response::HTTP_CREATED, 'Post created successfully', [
             'post' => $post->load('platforms'),
