@@ -19,6 +19,9 @@ return new class extends Migration
             $table->dateTime('scheduled_time')->nullable();
             $table->enum('status', ['draft', 'scheduled', 'published'])->default('draft');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->index('user_id');
+            $table->index('status');
+            $table->index('scheduled_time');
             $table->timestamps();
         });
     }
