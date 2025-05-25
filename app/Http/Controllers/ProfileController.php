@@ -15,7 +15,6 @@ class ProfileController extends Controller
     public function show()
     {
         $user = Auth::user();
-        Log::info('Fetching profile', ['user_id' => $user->id]);
 
         return ApiResponse::success(Response::HTTP_OK, 'Profile retrieved successfully', [
             'name' => $user->name,
@@ -26,7 +25,6 @@ class ProfileController extends Controller
     public function update(UpdateProfileRequest $request)
     {
         $user = Auth::user();
-        Log::info('Updating profile', ['user_id' => $user->id, 'request' => $request->all()]);
 
         $validated = $request->validated();
 
@@ -42,8 +40,6 @@ class ProfileController extends Controller
             $user->password = Hash::make($validated['password']);
         }
         $user->save();
-
-        Log::info('Profile updated', ['user_id' => $user->id]);
 
         return ApiResponse::success(Response::HTTP_OK, 'Profile updated successfully', [
             'name' => $user->name,
@@ -61,7 +57,6 @@ class ProfileController extends Controller
         foreach ($posts as $post) {
             if ($post->image_url) {
                 Storage::disk('public')->delete($post->image_url);
-                Log::info('Deleted post image', ['path' => $post->image_url]);
             }
             $post->platforms()->detach();
             $post->delete();
