@@ -68,11 +68,9 @@ class PostController extends Controller
             $date = Carbon::parse($validated['scheduled_time'])->toDateString();
             $cacheKey = "user_post_count_{$userId}_{$date}";
 
-            $dailyPosts = Cache::remember($cacheKey, now()->endOfDay(), function () use ($userId, $date) {
-                return Post::where('user_id', $userId)
-                    ->whereDate('scheduled_time', $date)
-                    ->count();
-            });
+            $dailyPosts = Post::where('user_id', $userId)
+                ->whereDate('scheduled_time', $date)
+                ->count();
 
             if ($dailyPosts >= 10) {
                 return ApiResponse::error(Response::HTTP_TOO_MANY_REQUESTS, 'Daily post limit reached');
