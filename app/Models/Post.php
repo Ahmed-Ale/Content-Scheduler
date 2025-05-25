@@ -45,8 +45,8 @@ class Post extends Model
         static::created(function ($post) {
             $userId = $post->user_id;
             $date = $post->scheduled_time ? Carbon::parse($post->scheduled_time)->toDateString() : null;
-            Cache::tags(["user_posts_{$userId}"])->flush();
-            Cache::tags(["user_analytics_{$userId}"])->flush();
+            Cache::forget("user_posts_{$userId}");
+            Cache::forget("user_analytics_{$userId}");
             if ($date) {
                 Cache::forget("user_post_count_{$userId}_{$date}");
             }
@@ -55,16 +55,16 @@ class Post extends Model
 
         static::updated(function ($post) {
             $userId = $post->user_id;
-            Cache::tags(["user_posts_{$userId}"])->flush();
-            Cache::tags(["user_analytics_{$userId}"])->flush();
+            Cache::forget("user_posts_{$userId}");
+            Cache::forget("user_analytics_{$userId}");
             Cache::forget('due_posts');
         });
 
         static::deleted(function ($post) {
             $userId = $post->user_id;
             $date = $post->scheduled_time ? Carbon::parse($post->scheduled_time)->toDateString() : null;
-            Cache::tags(["user_posts_{$userId}"])->flush();
-            Cache::tags(["user_analytics_{$userId}"])->flush();
+            Cache::forget("user_posts_{$userId}");
+            Cache::forget("user_analytics_{$userId}");
             if ($date) {
                 Cache::forget("user_post_count_{$userId}_{$date}");
             }

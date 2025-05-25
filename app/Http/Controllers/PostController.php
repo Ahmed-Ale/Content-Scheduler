@@ -210,7 +210,6 @@ class PostController extends Controller
         $userId = Auth::id();
         $cacheKey = "user_analytics_{$userId}";
 
-        // Reuse analytics logic
         $analytics = Cache::remember($cacheKey, now()->addHours(1), function () use ($userId) {
             $posts = Post::where('user_id', $userId)
                 ->with(['platforms' => function ($query) {
@@ -227,7 +226,7 @@ class PostController extends Controller
             $successRate = $totalPosts > 0 ? ($publishedPosts / $totalPosts) * 100 : 0;
 
             return [
-                'posts_per_platform' => $postsPerPlatform->toArray(), // Ensure array for CSV
+                'posts_per_platform' => $postsPerPlatform->toArray(),
                 'success_rate' => round($successRate, 2),
                 'scheduled_count' => $posts->where('status', 'scheduled')->count(),
                 'published_count' => $publishedPosts,
@@ -235,7 +234,6 @@ class PostController extends Controller
             ];
         });
 
-        // Handle empty analytics data
         if (empty($analytics['posts_per_platform'])) {
             return response()->json([
                 'status' => Response::HTTP_OK,
@@ -243,10 +241,8 @@ class PostController extends Controller
             ], Response::HTTP_OK);
         }
 
-        // Generate CSV
         $csv = Writer::createFromString();
         $csv->insertOne(['Platform', 'Post Count', 'Success Rate (%)', 'Scheduled', 'Published', 'Failed']);
-
         foreach ($analytics['posts_per_platform'] as $platform => $count) {
             $csv->insertOne([
                 $platform,
