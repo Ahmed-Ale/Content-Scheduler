@@ -9,6 +9,7 @@ use App\Models\Post;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -16,31 +17,43 @@ class PostController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Post::where('user_id', Auth::id())
-            ->with(['platforms' => function ($query) {
-                $query->select('platforms.id', 'platforms.name', 'platforms.type', 'post_platform.platform_status');
-            }]);
+        $userId = Auth::id();
+        $status = $request->input('status', 'all');
+        $date = $request->input('date', 'all');
+        $cacheKey = "user_posts_{$userId}_{$status}_{$date}";
 
-        if ($request->filled('status') && in_array(strtolower($request->status), ['scheduled', 'published', 'failed'])) {
-            $query->where('status', strtolower($request->status));
-        }
+        $posts = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($userId, $status, $date) {
+            $query = Post::where('user_id', $userId)
+                ->with(['platforms' => function ($query) {
+                    $query->select('platforms.id', 'platforms.name', 'platforms.type', 'post_platform.platform_status');
+                }]);
 
-        if ($request->filled('date')) {
-            $query->whereDate('scheduled_time', Carbon::parse($request->date)->toDateString());
-        }
+            if ($status !== 'all' && in_array(strtolower($status), ['scheduled', 'published', 'failed'])) {
+                $query->where('status', strtolower($status));
+            }
 
-        $posts = $query->get();
+            if ($date !== 'all') {
+                $query->whereDate('scheduled_time', Carbon::parse($date)->toDateString());
+            }
+
+            return $query->get();
+        });
 
         return ApiResponse::success(Response::HTTP_OK, 'Posts retrieved successfully', $posts);
     }
 
     public function show($id)
     {
-        $post = Post::where('user_id', Auth::id())
-            ->with(['platforms' => function ($query) {
-                $query->select('platforms.id', 'platforms.name', 'platforms.type', 'post_platform.platform_status');
-            }])
-            ->findOrFail($id);
+        $userId = Auth::id();
+        $cacheKey = "post_{$userId}_{$id}";
+
+        $post = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($userId, $id) {
+            return Post::where('user_id', $userId)
+                ->with(['platforms' => function ($query) {
+                    $query->select('platforms.id', 'platforms.name', 'platforms.type', 'post_platform.platform_status');
+                }])
+                ->findOrFail($id);
+        });
 
         return ApiResponse::success(Response::HTTP_OK, 'Post retrieved successfully', $post);
     }
@@ -48,14 +61,22 @@ class PostController extends Controller
     public function store(CreatePostRequest $request)
     {
         $validated = $request->validated();
+        $userId = Auth::id();
 
-        if($validated['scheduled_time']) {
-            $dailyPosts = Post::where('user_id', Auth::id())
-                ->whereDate('scheduled_time', Carbon::parse($validated['scheduled_time'])->toDateString())
-                ->count();
+        if ($validated['scheduled_time']) {
+            $date = Carbon::parse($validated['scheduled_time'])->toDateString();
+            $cacheKey = "user_post_count_{$userId}_{$date}";
+
+            $dailyPosts = Cache::remember($cacheKey, now()->endOfDay(), function () use ($userId, $date) {
+                return Post::where('user_id', $userId)
+                    ->whereDate('scheduled_time', $date)
+                    ->count();
+            });
+
             if ($dailyPosts >= 10) {
                 return ApiResponse::error(Response::HTTP_TOO_MANY_REQUESTS, 'Daily post limit reached');
             }
+
             $validated['status'] = 'scheduled';
         } else {
             $validated['status'] = 'draft';
@@ -72,10 +93,13 @@ class PostController extends Controller
             'image_url' => $imageUrl,
             'scheduled_time' => $validated['scheduled_time'],
             'status' => $validated['status'],
-            'user_id' => Auth::id(),
+            'user_id' => $userId,
         ]);
 
         $post->platforms()->attach($validated['platforms'], ['platform_status' => 'pending']);
+
+        // Invalidate daily post count cache
+        Cache::forget("user_post_count_{$userId}_{$date}");
 
         return ApiResponse::success(Response::HTTP_CREATED, 'Post created successfully', [
             'post' => $post->load('platforms'),
@@ -143,12 +167,34 @@ class PostController extends Controller
         if (!Auth::check()) {
             return ApiResponse::error(Response::HTTP_UNAUTHORIZED, 'Unauthorized');
         }
-        $posts = Post::where('user_id', Auth::id())
-            ->with(['platforms' => function ($query) {
-                $query->select('platforms.id', 'platforms.name', 'platforms.type', 'post_platform.platform_status');
-            }])
-            ->get();
 
-        return ApiResponse::success(Response::HTTP_OK, 'Analytics data retrieved', $posts);
+        $userId = Auth::id();
+        $cacheKey = "user_analytics_{$userId}";
+
+        $analytics = Cache::remember($cacheKey, now()->addHours(1), function () use ($userId) {
+            $posts = Post::where('user_id', $userId)
+                ->with(['platforms' => function ($query) {
+                    $query->select('platforms.id', 'platforms.name', 'platforms.type', 'post_platform.platform_status');
+                }])
+                ->get();
+
+            $postsPerPlatform = $posts->flatMap->platforms
+                ->groupBy('name')
+                ->map->count();
+
+            $totalPosts = $posts->count();
+            $publishedPosts = $posts->where('status', 'published')->count();
+            $successRate = $totalPosts > 0 ? ($publishedPosts / $totalPosts) * 100 : 0;
+
+            return [
+                'posts_per_platform' => $postsPerPlatform,
+                'success_rate' => round($successRate, 2),
+                'scheduled_count' => $posts->where('status', 'scheduled')->count(),
+                'published_count' => $publishedPosts,
+                'failed_count' => $posts->where('status', 'failed')->count(),
+            ];
+        });
+
+        return ApiResponse::success(Response::HTTP_OK, 'Analytics data retrieved', $analytics);
     }
 }
