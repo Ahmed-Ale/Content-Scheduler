@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class Post extends Model
 {
@@ -40,12 +41,13 @@ class Post extends Model
             ->withTimestamps();
     }
 
-    protected static function booted()
+    protected static function booted(): void
     {
         static::created(function ($post) {
             $userId = $post->user_id;
             $date = $post->scheduled_time ? Carbon::parse($post->scheduled_time)->toDateString() : null;
-            Cache::forget("user_posts_{$userId}");
+
+            self::clearUserPostsCaches($userId);
             Cache::forget("user_analytics_{$userId}");
             if ($date) {
                 Cache::forget("user_post_count_{$userId}_{$date}");
@@ -55,7 +57,8 @@ class Post extends Model
 
         static::updated(function ($post) {
             $userId = $post->user_id;
-            Cache::forget("user_posts_{$userId}");
+
+            self::clearUserPostsCaches($userId);
             Cache::forget("user_analytics_{$userId}");
             Cache::forget('due_posts');
         });
@@ -63,12 +66,20 @@ class Post extends Model
         static::deleted(function ($post) {
             $userId = $post->user_id;
             $date = $post->scheduled_time ? Carbon::parse($post->scheduled_time)->toDateString() : null;
-            Cache::forget("user_posts_{$userId}");
+
+            self::clearUserPostsCaches($userId);
             Cache::forget("user_analytics_{$userId}");
             if ($date) {
                 Cache::forget("user_post_count_{$userId}_{$date}");
             }
             Cache::forget('due_posts');
         });
+    }
+
+    protected static function clearUserPostsCaches($userId): void
+    {
+        DB::table('cache')
+            ->where('key', 'like', "laravel_cache_user_posts_{$userId}%")
+            ->delete();
     }
 }
