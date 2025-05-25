@@ -12,7 +12,7 @@ Route::controller(AuthController::class)->prefix('/auth')->group(function () {
     Route::post('/logout', 'logout')->middleware('auth:sanctum');
 });
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     Route::controller(ProfileController::class)->group(function () {
         Route::get('/user', 'show');
         Route::put('/user', 'update');
@@ -21,6 +21,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::apiResource('/posts', PostController::class);
     Route::get('/analytics', [PostController::class, 'analytics']);
+    Route::get('/analytics/export', [PostController::class, 'exportAnalytics']);
 
     Route::get('/platforms', [PlatformController::class, 'index']);
     Route::post('/platforms/toggle', [PlatformController::class, 'toggle']);
