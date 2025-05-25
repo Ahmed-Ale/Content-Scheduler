@@ -32,7 +32,7 @@ class PublishPostJob implements ShouldQueue
         $allSuccessful = true;
 
         foreach ($platforms as $platform) {
-            $platformStatus = $this->mockPublish($this->post, $platform);
+            $platformStatus = $this->publishToPlatform($this->post, $platform);
 
             $this->post->platforms()->updateExistingPivot($platform->id, [
                 'platform_status' => $platformStatus,
@@ -59,23 +59,20 @@ class PublishPostJob implements ShouldQueue
         ]);
     }
 
-    protected function mockPublish(Post $post, $platform): string
+    protected function publishToPlatform(Post $post, $platform): string
     {
-        if ($platform->id === 1) {
-            // Platform 1 always succeeds
-            return 'published';
+        switch ($platform->id) {
+            case 1:
+               // Platform 1 always succeeds
+                return 'published';
+            case 2:
+                // Platform 2: Fails if content exceeds 280 characters
+                return strlen($post->content) <= 280 ? 'published' : 'failed';
+            case 3:
+                // Platform 3: 10% chance of failure
+                return mt_rand(1, 100) <= 90 ? 'published' : 'failed';
+            default:
+                return 'failed';
         }
-
-        if ($platform->id === 2) {
-            // Platform 2: Fails if content exceeds 280 characters
-            return strlen($post->content) <= 280 ? 'published' : 'failed';
-        }
-
-        if ($platform->id === 3) {
-            // Platform 3: 10% chance of failure
-            return mt_rand(1, 100) <= 90 ? 'published' : 'failed';
-        }
-
-        return 'failed';
     }
 }
