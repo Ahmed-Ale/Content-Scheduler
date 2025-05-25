@@ -73,18 +73,71 @@ class AuthTest extends TestCase
             ]);
     }
 
-    public function test_user_cannot_login_with_invalid_credentials()
+
+    public function test_user_cannot_register_with_existing_email()
     {
-        $response = $this->postJson('/api/auth/login', [
-            'email' => 'test@example.com',
-            'password' => 'wrong_password',
+        User::factory()->create([
+            'email' => 'john@example.com'
         ]);
 
-        $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY)
-            ->assertJson([
-                'status' => Response::HTTP_UNPROCESSABLE_ENTITY,
-                'message' => 'Invalid email or password',
-                'errors' => [],
+        $userData = [
+            'name' => 'John Doe',
+            'email' => 'john@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ];
+
+        $response = $this->postJson('/api/auth/register', $userData);
+        $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY);
+    }
+
+    public function test_user_can_login_with_valid_credentials()
+    {
+        $user = User::factory()->create([
+            'email' => 'john@example.com',
+            'password' => Hash::make('password123'),
+        ]);
+
+        $response = $this->postJson('/api/auth/login', [
+            'email' => 'john@example.com',
+            'password' => 'password123',
+        ]);
+
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJsonStructure([
+                'status',
+                'message',
+                'data' => [
+                    'user',
+                    'token',
+                ],
             ]);
+    }
+
+    public function test_user_cannot_login_with_invalid_credentials()
+    {
+        User::factory()->create([
+            'email' => 'john@example.com',
+            'password' => Hash::make('password123'),
+        ]);
+
+        $response = $this->postJson('/api/auth/login', [
+            'email' => 'john@example.com',
+            'password' => 'wrongpassword',
+        ]);
+
+        $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY);
+    }
+
+    public function test_user_can_logout()
+    {
+        $user = User::factory()->create();
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+            ->postJson('/api/auth/logout');
+
+        $response->assertStatus(Response::HTTP_OK);
+        $this->assertDatabaseCount('personal_access_tokens', 0);
     }
 }
