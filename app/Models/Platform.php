@@ -4,8 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Facades\Cache;
 
 class Platform extends Model
 {
@@ -32,5 +32,20 @@ class Platform extends Model
         return $this->belongsToMany(Post::class, 'post_platform')
             ->withPivot('platform_status')
             ->withTimestamps();
+    }
+
+    protected static function booted()
+    {
+        static::created(function () {
+            Cache::forget('platforms_list');
+        });
+
+        static::updated(function () {
+            Cache::forget('platforms_list');
+        });
+
+        static::deleted(function () {
+            Cache::forget('platforms_list');
+        });
     }
 }
