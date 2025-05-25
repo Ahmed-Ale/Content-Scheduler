@@ -103,8 +103,7 @@ async function getPlatforms() {
 }
 
 async function togglePlatform(platformId, active) {
-    const response = await post('/platforms/toggle', { platform_id: platformId, active });
-    return response;
+    return await post('/platforms/toggle', { platform_id: platformId, active });
 }
 
 async function getAnalytics() {
@@ -140,4 +139,4 @@ export default {
     getProfile,
     updateProfile,
     deleteProfile,
-};``
+};
