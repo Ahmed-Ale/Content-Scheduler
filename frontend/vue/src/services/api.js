@@ -42,6 +42,9 @@ async function request(method, endpoint, data = null, isMultipart = false) {
     if (!response.ok) {
         const error = new Error(json.message || 'Request failed');
         error.status = response.status;
+        if (response.status === 429) {
+            error.message = 'Too many requests. Please try again later.';
+        }
         error.errors = json.errors || {};
         throw error;
     }
