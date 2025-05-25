@@ -58,10 +58,14 @@ class PlatformController extends Controller
             if ($isActive !== $validated['active']) {
                 return ApiResponse::error(Response::HTTP_INTERNAL_SERVER_ERROR, 'Failed to update platform status');
             }
+
+            Cache::forget("user_platforms_{$user->id}");
         } catch (\Exception $e) {
             DB::rollBack();
-
-            return ApiResponse::error(Response::HTTP_INTERNAL_SERVER_ERROR, 'Failed to toggle platform');
+            return ApiResponse::error(Response::HTTP_INTERNAL_SERVER_ERROR, 'Failed to toggle platform', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
         }
 
         return ApiResponse::success(Response::HTTP_OK, 'Platform toggled successfully', [
