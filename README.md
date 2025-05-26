@@ -78,8 +78,14 @@ A powerful content scheduling and management system built with Laravel and Vue.j
     ```bash
     php artisan migrate
     ```
+   
+7. make a symbolic link
 
-7. Start the frontend development server:
+    ```bash
+   php artisan storage:link
+   ```
+
+8. Start the frontend development server:
 
    Open a new terminal and run:
     ```bash
@@ -88,7 +94,7 @@ A powerful content scheduling and management system built with Laravel and Vue.j
     ```
    This will start the Vue development server, usually on http://localhost:5173.
 
-8. Start the Laravel backend server::
+9. Start the Laravel backend server::
 
    In your original terminal, run:
     ```bash
