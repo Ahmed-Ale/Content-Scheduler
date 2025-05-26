@@ -154,7 +154,6 @@ class PostController extends Controller
 
         if ($validated['scheduled_time']) {
             $date = Carbon::parse($validated['scheduled_time'])->toDateString();
-            $cacheKey = "user_post_count_{$userId}_{$date}";
 
             $dailyPosts = Post::where('user_id', $userId)
                 ->whereDate('scheduled_time', $date)
@@ -165,6 +164,8 @@ class PostController extends Controller
             }
 
             $validated['status'] = 'scheduled';
+            Cache::forget("user_post_count_{$userId}_{$date}");
+
         } else {
             $validated['status'] = 'draft';
         }
@@ -192,7 +193,6 @@ class PostController extends Controller
             }
         }
 
-        Cache::forget("user_post_count_{$userId}_{$date}");
         Cache::forget("user_platforms_{$userId}"); // Ensure platform data is fresh for analytics
 
         return ApiResponse::success(Response::HTTP_CREATED, 'Post created successfully', [
