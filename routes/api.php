@@ -10,7 +10,7 @@ Route::controller(AuthController::class)->prefix('/auth')->group(function () {
     Route::post('/register', 'register');
     Route::post('/login', 'login');
     Route::post('/logout', 'logout')->middleware('auth:sanctum');
-});
+})->middleware('throttle:api');
 
 Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     Route::controller(ProfileController::class)->group(function () {
