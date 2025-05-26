@@ -188,4 +188,4 @@ It includes:
 - Platform requirements like character limits are hardcoded but can be expanded per platform type.
 
 ## Demo Video
-[Link to your Google Drive demo video]
+https://drive.google.com/file/d/1dXFQ3BXWHexmwAbzkilXFMZvjYnAGd2b/view?usp=sharing
