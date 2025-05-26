@@ -5,6 +5,18 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Password;
 
+/**
+ * @OA\Schema(
+ *     schema="UpdateProfileRequest",
+ *     required={"name", "email"},
+ *
+ *     @OA\Property(property="name", type="string", maxLength=255, example="Jane Doe"),
+ *     @OA\Property(property="email", type="string", format="email", maxLength=255, example="janedoe@example.com"),
+ *     @OA\Property(property="old_password", type="string", nullable=true, example="OldPassword123!"),
+ *     @OA\Property(property="password", type="string", nullable=true, minLength=8, example="NewPassword123!"),
+ *     @OA\Property(property="password_confirmation", type="string", nullable=true, minLength=8, example="NewPassword123!")
+ * )
+ */
 class UpdateProfileRequest extends FormRequest
 {
     /**

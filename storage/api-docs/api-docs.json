@@ -703,6 +703,43 @@
                     }
                 },
                 "type": "object"
+            },
+            "UpdateProfileRequest": {
+                "required": [
+                    "name",
+                    "email"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 255,
+                        "example": "Jane Doe"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "maxLength": 255,
+                        "example": "janedoe@example.com"
+                    },
+                    "old_password": {
+                        "type": "string",
+                        "example": "OldPassword123!",
+                        "nullable": true
+                    },
+                    "password": {
+                        "type": "string",
+                        "minLength": 8,
+                        "example": "NewPassword123!",
+                        "nullable": true
+                    },
+                    "password_confirmation": {
+                        "type": "string",
+                        "minLength": 8,
+                        "example": "NewPassword123!",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
             }
         }
     },

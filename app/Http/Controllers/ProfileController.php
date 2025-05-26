@@ -12,6 +12,30 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ProfileController extends Controller
 {
+    /**
+     * @OA\Get(
+     *     path="/api/profile",
+     *     summary="Get authenticated user profile",
+     *     tags={"Profile"},
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Profile retrieved successfully",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="name", type="string"),
+     *             @OA\Property(property="email", type="string", format="email")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated"
+     *     )
+     * )
+     */
     public function show()
     {
         $user = Auth::user();
@@ -22,6 +46,30 @@ class ProfileController extends Controller
         ]);
     }
 
+    //    /**
+    //     * @OA\Put(
+    //     *     path="/api/profile",
+    //     *     summary="Update authenticated user profile",
+    //     *     tags={"Profile"},
+    //     *     security={{"bearerAuth":{}}},
+    //     *     @OA\RequestBody(
+    //     *         required=true,
+    //     *         @OA\JsonContent(ref="#/components/schemas/UpdateProfileRequest")
+    //     *     ),
+    //     *     @OA\Response(
+    //     *         response=200,
+    //     *         description="Profile updated successfully",
+    //     *         @OA\JsonContent(
+    //     *             @OA\Property(property="name", type="string"),
+    //     *             @OA\Property(property="email", type="string", format="email")
+    //     *         )
+    //     *     ),
+    //     *     @OA\Response(
+    //     *         response=422,
+    //     *         description="Validation error or incorrect password"
+    //     *     )
+    //     * )
+    //     */
     public function update(UpdateProfileRequest $request)
     {
         $user = Auth::user();
@@ -47,6 +95,22 @@ class ProfileController extends Controller
         ]);
     }
 
+    //    /**
+    //     * @OA\Delete(
+    //     *     path="/api/profile",
+    //     *     summary="Delete authenticated user profile",
+    //     *     tags={"Profile"},
+    //     *     security={{"bearerAuth":{}}},
+    //     *     @OA\Response(
+    //     *         response=200,
+    //     *         description="Profile deleted successfully"
+    //     *     ),
+    //     *     @OA\Response(
+    //     *         response=401,
+    //     *         description="Unauthenticated"
+    //     *     )
+    //     * )
+    //     */
     public function destroy()
     {
         $user = Auth::user();
