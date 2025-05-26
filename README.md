@@ -47,8 +47,18 @@ A powerful content scheduling and management system built with Laravel and Vue.j
 
 4. Configure environment:
 
-    ```bash
+   On Linux/macOS:
+   ```bash
     cp .env.example .env
+    ```
+
+   On Windows Command Prompt:
+    ```bash
+    copy .env.example .env
+    ```
+
+   Generate the app key
+    ```bash
     php artisan key:generate
     ```
 
@@ -69,19 +79,60 @@ A powerful content scheduling and management system built with Laravel and Vue.j
     php artisan migrate
     ```
 
-7. Build frontend assets:
+7. Start the frontend development server:
 
+   Open a new terminal and run:
     ```bash
     cd frontend/vue
-    npm run build
-    cd ../..
+    npm run dev
     ```
+   This will start the Vue development server, usually on http://localhost:5173.
 
-8. Start the development server:
+8. Start the Laravel backend server::
 
+   In your original terminal, run:
     ```bash
     php artisan serve
     ```
+
+## Scheduler & Queue Setup
+
+To enable automated scheduled publishing, you need to run the Laravel scheduler **and** a queue worker process.
+
+### On Windows (Development)
+
+You have two options:
+
+Run the scheduler as a long-running process (recommended for dev):
+
+```bash
+php artisan schedule:work
+```
+
+Run the queue worker separately in another terminal:
+
+```bash
+php artisan queue:work --queue=publishing
+```
+
+### On Linux / Production
+
+- Use cron to run the scheduler every minute by adding this line to your crontab:
+```cron
+* * * * * php /path-to-project/artisan schedule:run >> /dev/null 2>&1
+```
+- Use Supervisor to keep the queue worker running and automatically restart it if it fails. Example Supervisor config:
+```ini
+[program:laravel-worker]
+process_name=%(program_name)s_%(process_num)02d
+command=php /path-to-project/artisan queue:work --queue=publishing --sleep=3 --tries=3
+autostart=true
+autorestart=true
+numprocs=1
+redirect_stderr=true
+stdout_logfile=/path-to-project/storage/logs/worker.log
+```
+
 
 ## Project Structure
 
@@ -96,20 +147,6 @@ A powerful content scheduling and management system built with Laravel and Vue.j
     - `api.php` - API routes
     - `web.php` - Web routes
 - `tests/` - PHPUnit test suite
-
-## Queue Worker
-
-To process the scheduled posts, run the queue worker:
-
-```bash
-php artisan queue:listen --tries=1
-```
-
-Or run all services (backend, queue, and frontend build watcher) simultaneously:
-
-```bash
-composer run dev
-```
 
 ## Testing
 
