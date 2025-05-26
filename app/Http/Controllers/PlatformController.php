@@ -12,6 +12,36 @@ use Symfony\Component\HttpFoundation\Response;
 
 class PlatformController extends Controller
 {
+    /**
+     * @OA\Get(
+     *     path="/api/platforms",
+     *     summary="Get all platforms with user's active status",
+     *     tags={"Platforms"},
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Platforms retrieved successfully",
+     *
+     *         @OA\JsonContent(
+     *             type="array",
+     *
+     *             @OA\Items(
+     *
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="name", type="string", example="Facebook"),
+     *                 @OA\Property(property="type", type="string", example="social"),
+     *                 @OA\Property(property="active", type="boolean", example=true)
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized"
+     *     )
+     * )
+     */
     public function index()
     {
         $user = Auth::user();
@@ -39,6 +69,40 @@ class PlatformController extends Controller
         return ApiResponse::success(Response::HTTP_OK, 'Platforms retrieved successfully', $platforms);
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/platforms/toggle",
+     *     summary="Toggle a platform's active status for the authenticated user",
+     *     tags={"Platforms"},
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *
+     *         @OA\JsonContent(ref="#/components/schemas/PlatformToggleRequest")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Platform toggled successfully",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="platform_id", type="integer", example=2),
+     *             @OA\Property(property="active", type="boolean", example=true)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation failed"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Failed to toggle platform"
+     *     )
+     * )
+     */
     public function toggle(PlatformToggleRequest $request)
     {
         $validated = $request->validated();
@@ -62,6 +126,7 @@ class PlatformController extends Controller
             Cache::forget("user_platforms_{$user->id}");
         } catch (\Exception $e) {
             DB::rollBack();
+
             return ApiResponse::error(Response::HTTP_INTERNAL_SERVER_ERROR, 'Failed to toggle platform', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),

@@ -4,6 +4,16 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * @OA\Schema(
+ * *     schema="PlatformToggleRequest",
+ * *     type="object",
+ * *     required={"platform_id", "active"},
+ *
+ * *     @OA\Property(property="platform_id", type="integer", example=2),
+ * *     @OA\Property(property="active", type="boolean", example=true)
+ * * )
+ */
 class PlatformToggleRequest extends FormRequest
 {
     /**
