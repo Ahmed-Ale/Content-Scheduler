@@ -61,18 +61,11 @@ class PublishPostJob implements ShouldQueue
 
     protected function publishToPlatform(Post $post, $platform): string
     {
-        switch ($platform->id) {
-            case 1:
-                // Platform 1 always succeeds
-                return 'published';
-            case 2:
-                // Platform 2: Fails if content exceeds 280 characters
-                return strlen($post->content) <= 280 ? 'published' : 'failed';
-            case 3:
-                // Platform 3: 10% chance of failure
-                return mt_rand(1, 100) <= 90 ? 'published' : 'failed';
-            default:
-                return 'failed';
-        }
+        return match ($platform->id) {
+            1 => 'published', // Platform 1 always succeeds
+            2 => strlen($post->content) <= 280 ? 'published' : 'failed', // Platform 2: Fails if content exceeds 280 characters
+            3 => mt_rand(1, 100) <= 90 ? 'published' : 'failed', // Platform 3: 10% chance of failure
+            default => 'failed',
+        };
     }
 }
