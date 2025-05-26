@@ -5,107 +5,144 @@ A powerful content scheduling and management system built with Laravel and Vue.j
 ## Features
 
 - Multi-platform content scheduling
-- User management and authentication
+- User management and authentication with Laravel Sanctum
 - Platform integration management
 - Automated content publishing through job queues
-- RESTful API architecture
-- Modern Vue.js frontend
+- RESTful API architecture with L5-Swagger documentation
+- Modern Vue.js frontend with Pinia, Vue Router, and Chart.js
 
 ## Requirements
 
-- PHP >= 8.0
-- Composer
-- Node.js & npm
-- MySQL/PostgreSQL
-- Laravel requirements
+- PHP >= 8.2
+- Composer >= 2.0
+- Node.js >= 18.x
+- npm >= 8.x
+- MySQL >= 5.7 or compatible database
+- Redis (optional, for caching/queue)
+- Memcached (optional, for caching)
+- Laravel 12.x requirements (see Laravel documentation)
 
 ## Installation
 
 1. Clone the repository:
-```bash
-git clone [repository-url]
-cd Content-Scheduler
-```
+
+    ```bash
+    git clone https://github.com/Ahmed-Ale/Content-Scheduler.git
+    cd content-scheduler
+    ```
 
 2. Install PHP dependencies:
-```bash
-composer install
-```
+
+    ```bash
+    composer install
+    ```
 
 3. Install JavaScript dependencies:
-```bash
-npm install
-```
+
+    ```bash
+    cd frontend/vue
+    npm install
+    cd ../..
+    ```
 
 4. Configure environment:
-```bash
-cp .env.example .env
-php artisan key:generate
-```
+
+    ```bash
+    cp .env.example .env
+    php artisan key:generate
+    ```
 
 5. Configure your database in `.env` file:
-```
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=your_database_name
-DB_USERNAME=your_username
-DB_PASSWORD=your_password
-```
 
-6. Run migrations and seeders:
-```bash
-php artisan migrate
-php artisan db:seed
-```
+    ```env
+    DB_CONNECTION=mysql
+    DB_HOST=127.0.0.1
+    DB_PORT=3306
+    DB_DATABASE=content_scheduler
+    DB_USERNAME=root
+    DB_PASSWORD=root
+    ```
+
+6. Run migrations:
+
+    ```bash
+    php artisan migrate
+    ```
 
 7. Build frontend assets:
-```bash
-npm run build
-```
+
+    ```bash
+    cd frontend/vue
+    npm run build
+    cd ../..
+    ```
 
 8. Start the development server:
-```bash
-php artisan serve
-```
+
+    ```bash
+    php artisan serve
+    ```
 
 ## Project Structure
 
 - `app/` - Contains the core code of the application
-  - `Console/Commands/` - Custom Artisan commands
-  - `Http/Controllers/` - Application controllers
-  - `Models/` - Eloquent models
-  - `Jobs/` - Queue jobs including PublishPostJob
-- `database/` - Database migrations and seeders
+    - `Console/Commands/` - Custom Artisan commands
+    - `Http/Controllers/` - Application controllers
+    - `Models/` - Eloquent models
+    - `Jobs/` - Queue jobs for automated publishing
+- `database/` - Migrations, factories, and seeders
 - `frontend/vue/` - Vue.js frontend application
-- `routes/` - Application routes
-  - `api.php` - API routes
-  - `web.php` - Web routes
+- `routes/` - Application route definitions
+    - `api.php` - API routes
+    - `web.php` - Web routes
+- `tests/` - PHPUnit test suite
 
 ## Queue Worker
 
-To process the scheduled posts, make sure to run the queue worker:
+To process the scheduled posts, run the queue worker:
 
 ```bash
-php artisan queue:work
+php artisan queue:listen --tries=1
+```
+
+Or run all services (backend, queue, and frontend build watcher) simultaneously:
+
+```bash
+composer run dev
 ```
 
 ## Testing
 
-Run the test suite using:
+Run the test suite:
 
 ```bash
-php artisan test
+composer run test
 ```
 
-## Contributing
+## API Documentation
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+The API documentation is available via L5-Swagger at:
 
-## License
+http://localhost:8000/api/documentation
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+Make sure `L5_SWAGGER_CONST_HOST` in `.env` matches your `APP_URL`.
+
+## Approach & Notes
+
+This project was built as part of the Backend Developer Coding Challenge: Content Scheduler.
+It includes:
+- A Laravel backend with Sanctum-based auth and API routes
+- A Vue.js frontend with a post editor, dashboard, and settings
+- Job queues to process scheduled posts
+- Mock publishing logic and basic platform-specific validation
+
+## Trade-offs & Assumptions
+
+- The publishing process is mocked and logged instead of integrated with actual APIs.
+
+- Rate limiting (10 posts/day) is enforced via Laravel validation.
+
+- Platform requirements like character limits are hardcoded but can be expanded per platform type.
+
+## Demo Video
+[Link to your Google Drive demo video]
