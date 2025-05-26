@@ -153,7 +153,7 @@ stdout_logfile=/path-to-project/storage/logs/worker.log
 Run the test suite:
 
 ```bash
-composer run test
+php artisan test
 ```
 
 ## API Documentation
