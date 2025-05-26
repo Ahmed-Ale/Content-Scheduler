@@ -166,6 +166,12 @@
 import api from '../services/api';
 import { format } from 'date-fns';
 import { Modal } from 'bootstrap';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 export default {
     name: 'Dashboard',
@@ -250,7 +256,10 @@ export default {
             }
         },
         formatDate(date) {
-            return date ? format(new Date(date), 'MMM d, yyyy HH:mm') : 'N/A';
+            if (!date) return 'N/A';
+            return dayjs(date)
+                .tz('Europe/Tallinn')
+                .format('YYYY-MM-DD h:mm A');
         },
         truncateContent(content) {
             if (!content) return 'No content';
