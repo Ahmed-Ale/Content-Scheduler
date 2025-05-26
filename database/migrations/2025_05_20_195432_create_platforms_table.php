@@ -17,6 +17,27 @@ return new class extends Migration
             $table->string('type');
             $table->timestamps();
         });
+
+        DB::table('platforms')->insert([
+            [
+                'name' => 'LinkedIn',
+                'type' => 'linkedin',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'name' => 'Twitter',
+                'type' => 'twitter',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'name' => 'Instagram',
+                'type' => 'instagram',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        ]);
     }
 
     /**
