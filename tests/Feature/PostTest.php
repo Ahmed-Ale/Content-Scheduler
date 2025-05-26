@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Models\Platform;
 use App\Models\Post;
 use App\Models\User;
-use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -17,7 +16,9 @@ class PostTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private string $token;
+
     private Platform $platform;
 
     protected function setUp(): void
@@ -37,7 +38,7 @@ class PostTest extends TestCase
 
         $this->user->platforms()->attach($this->platform->id);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->token)
             ->postJson('/api/posts', [
                 'title' => 'Test Post',
                 'content' => 'Test content',
@@ -47,7 +48,7 @@ class PostTest extends TestCase
             ]);
 
         $response->assertStatus(Response::HTTP_CREATED);
-        Storage::disk('public')->assertExists('images/' . $image->hashName());
+        Storage::disk('public')->assertExists('images/'.$image->hashName());
     }
 
     public function test_user_cannot_exceed_daily_post_limit()
@@ -59,8 +60,8 @@ class PostTest extends TestCase
             'status' => 'scheduled',
         ]);
 
-// 10th post via API
-        $this->withHeader('Authorization', 'Bearer ' . $this->token)
+        // 10th post via API
+        $this->withHeader('Authorization', 'Bearer '.$this->token)
             ->postJson('/api/posts', [
                 'title' => 'Test Post 10',
                 'content' => 'Test content 10',
@@ -68,8 +69,8 @@ class PostTest extends TestCase
                 'platforms' => [$this->platform->id],
             ]);
 
-// 11th post via API
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
+        // 11th post via API
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->token)
             ->postJson('/api/posts', [
                 'title' => 'Test Post',
                 'content' => 'Test content',
@@ -87,7 +88,7 @@ class PostTest extends TestCase
             'status' => 'draft',
         ]);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->token)
             ->putJson("/api/posts/{$post->id}", [
                 'title' => 'Updated Title',
                 'content' => 'Updated content',
@@ -115,7 +116,7 @@ class PostTest extends TestCase
             'status' => 'draft',
         ]);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->token)
             ->deleteJson("/api/posts/{$post->id}");
 
         $response->assertStatus(Response::HTTP_OK);
@@ -129,7 +130,7 @@ class PostTest extends TestCase
             'status' => 'published',
         ]);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->token)
             ->deleteJson("/api/posts/{$post->id}");
 
         $response->assertStatus(Response::HTTP_FORBIDDEN);
@@ -148,7 +149,7 @@ class PostTest extends TestCase
             'status' => 'scheduled',
         ]);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->token)
             ->getJson('/api/analytics');
 
         $response->assertStatus(Response::HTTP_OK)
@@ -179,7 +180,7 @@ class PostTest extends TestCase
         }
 
         // Use get() instead of getJson()
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->token)
             ->get('/api/analytics/export');
 
         $this->assertStringContainsString('text/csv', $response->headers->get('Content-Type'));
@@ -191,9 +192,10 @@ class PostTest extends TestCase
         $content = $response->getContent();
         $this->assertStringContainsString('Twitter,5,100,0,5,0', $content);
     }
+
     public function test_export_analytics_with_no_data()
     {
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->token)
             ->getJson('/api/analytics/export');
 
         $response->assertStatus(200)
