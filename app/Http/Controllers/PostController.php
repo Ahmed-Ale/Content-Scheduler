@@ -16,6 +16,41 @@ use Symfony\Component\HttpFoundation\Response;
 
 class PostController extends Controller
 {
+    /**
+     * @OA\Get(
+     *     path="/api/posts",
+     *     summary="Get all posts of the authenticated user",
+     *     tags={"Posts"},
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(
+     *         name="status",
+     *         in="query",
+     *         description="Filter by post status (scheduled, published, failed, all)",
+     *         required=false,
+     *
+     *         @OA\Schema(type="string")
+     *     ),
+     *
+     *     @OA\Parameter(
+     *         name="date",
+     *         in="query",
+     *         description="Filter by scheduled date (Y-m-d format)",
+     *         required=false,
+     *
+     *         @OA\Schema(type="string", format="date")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Posts retrieved successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated"
+     *     )
+     * )
+     */
     public function index(Request $request)
     {
         $userId = Auth::id();
@@ -43,6 +78,32 @@ class PostController extends Controller
         return ApiResponse::success(Response::HTTP_OK, 'Posts retrieved successfully', $posts);
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/posts/{id}",
+     *     summary="Get a single post by ID",
+     *     tags={"Posts"},
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="Post ID",
+     *
+     *         @OA\Schema(type="integer")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Post retrieved successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Post not found"
+     *     )
+     * )
+     */
     public function show($id)
     {
         $userId = Auth::id();
@@ -59,6 +120,33 @@ class PostController extends Controller
         return ApiResponse::success(Response::HTTP_OK, 'Post retrieved successfully', $post);
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/posts",
+     *     summary="Create a new post",
+     *     tags={"Posts"},
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *
+     *         @OA\JsonContent(ref="#/components/schemas/CreatePostRequest")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=201,
+     *         description="Post created successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=429,
+     *         description="Daily post limit reached"
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error"
+     *     )
+     * )
+     */
     public function store(CreatePostRequest $request)
     {
         $validated = $request->validated();
@@ -96,10 +184,10 @@ class PostController extends Controller
         ]);
 
         // Attach platforms with validation
-        if (!empty($validated['platforms'])) {
+        if (! empty($validated['platforms'])) {
             $userPlatforms = Auth::user()->platforms()->pluck('platform_id')->toArray();
             $validPlatforms = array_intersect($validated['platforms'], $userPlatforms);
-            if (!empty($validPlatforms)) {
+            if (! empty($validPlatforms)) {
                 $post->platforms()->attach($validPlatforms, ['platform_status' => 'pending']);
             }
         }
@@ -112,6 +200,38 @@ class PostController extends Controller
         ]);
     }
 
+    /**
+     * @OA\Put(
+     *     path="/api/posts/{id}",
+     *     summary="Update an existing post",
+     *     tags={"Posts"},
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="Post ID",
+     *
+     *         @OA\Schema(type="integer")
+     *     ),
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *
+     *         @OA\JsonContent(ref="#/components/schemas/UpdatePostRequest")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Post updated successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Unauthorized to update this post"
+     *     )
+     * )
+     */
     public function update(UpdatePostRequest $request, Post $post)
     {
         if ($post->user_id !== Auth::id()) {
@@ -149,6 +269,32 @@ class PostController extends Controller
         ]);
     }
 
+    /**
+     * @OA\Delete(
+     *     path="/api/posts/{id}",
+     *     summary="Delete a post",
+     *     tags={"Posts"},
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="Post ID",
+     *
+     *         @OA\Schema(type="integer")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Post deleted successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Cannot delete a published post or unauthorized"
+     *     )
+     * )
+     */
     public function destroy(Post $post)
     {
         if ($post->user_id !== Auth::id()) {
@@ -168,6 +314,23 @@ class PostController extends Controller
         return ApiResponse::success(Response::HTTP_OK, 'Post deleted successfully');
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/posts/analytics",
+     *     summary="Get post analytics for the authenticated user",
+     *     tags={"Analytics"},
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Analytics data retrieved"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized"
+     *     )
+     * )
+     */
     public function analytics()
     {
         if (! Auth::check()) {
@@ -203,9 +366,32 @@ class PostController extends Controller
 
         return ApiResponse::success(Response::HTTP_OK, 'Analytics data retrieved', $analytics);
     }
+
+    /**
+     * @OA\Get(
+     *     path="/api/posts/analytics/export",
+     *     summary="Export post analytics to CSV",
+     *     tags={"Analytics"},
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="CSV export successful",
+     *
+     *         @OA\MediaType(
+     *             mediaType="text/csv"
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized"
+     *     )
+     * )
+     */
     public function exportAnalytics()
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return response()->json([
                 'status' => Response::HTTP_UNAUTHORIZED,
                 'message' => 'Unauthorized',
@@ -261,7 +447,7 @@ class PostController extends Controller
 
         return response($csv->toString(), 200, [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="analytics_export_' . now()->format('Y-m-d_H-i-s') . '.csv"',
+            'Content-Disposition' => 'attachment; filename="analytics_export_'.now()->format('Y-m-d_H-i-s').'.csv"',
         ]);
     }
 }

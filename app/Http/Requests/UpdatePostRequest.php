@@ -4,6 +4,31 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * @OA\Schema(
+ * *      schema="UpdatePostRequest",
+ * *      required={"title", "content", "platforms"},
+ *
+ * *      @OA\Property(property="title", type="string", maxLength=255, example="Updated Post Title"),
+ * *      @OA\Property(property="content", type="string", example="Updated content of the post."),
+ * *      @OA\Property(property="scheduled_time", type="string", format="date-time", nullable=true, example="2025-06-02T12:00:00Z"),
+ * *      @OA\Property(
+ * *          property="platforms",
+ * *          type="array",
+ *
+ * *          @OA\Items(type="integer", example=2),
+ * *          description="Updated array of platform IDs"
+ * *      ),
+ *
+ * *      @OA\Property(
+ * *          property="image",
+ * *          type="string",
+ * *          format="binary",
+ * *          nullable=true,
+ * *          description="Optional updated image file (max 2MB)"
+ * *      )
+ * *  )
+ */
 class UpdatePostRequest extends FormRequest
 {
     /**

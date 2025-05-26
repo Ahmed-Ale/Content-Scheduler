@@ -4,6 +4,31 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * @OA\Schema(
+ * *      schema="CreatePostRequest",
+ * *      required={"title", "content", "platforms"},
+ *
+ * *      @OA\Property(property="title", type="string", maxLength=255, example="My scheduled post"),
+ * *      @OA\Property(property="content", type="string", example="This is the post content."),
+ * *      @OA\Property(property="scheduled_time", type="string", format="date-time", nullable=true, example="2025-06-01T10:00:00Z"),
+ * *      @OA\Property(
+ * *          property="platforms",
+ * *          type="array",
+ *
+ * *          @OA\Items(type="integer", example=1),
+ * *          description="Array of platform IDs"
+ * *      ),
+ *
+ * *      @OA\Property(
+ * *          property="image",
+ * *          type="string",
+ * *          format="binary",
+ * *          nullable=true,
+ * *          description="Optional image file (max 2MB)"
+ * *      )
+ * *  )
+ */
 class CreatePostRequest extends FormRequest
 {
     /**
