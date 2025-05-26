@@ -13,6 +13,37 @@ use Symfony\Component\HttpFoundation\Response;
 
 class AuthController extends Controller
 {
+    /**
+     * @OA\Post(
+     *     path="/auth/register",
+     *     summary="Register a new user",
+     *     tags={"Auth"},
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *
+     *         @OA\JsonContent(ref="#/components/schemas/RegisterRequest")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=201,
+     *         description="User created successfully",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="message", type="string", example="User created successfully"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="user", type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="name", type="string", example="John Doe"),
+     *                     @OA\Property(property="email", type="string", example="johndoe@example.com")
+     *                 ),
+     *                 @OA\Property(property="token", type="string", example="your-jwt-token-here")
+     *             )
+     *         )
+     *     )
+     * )
+     */
     public function register(RegisterRequest $request)
     {
         $validated = $request->validated();
@@ -33,6 +64,47 @@ class AuthController extends Controller
         );
     }
 
+    /**
+     * @OA\Post(
+     *     path="/auth/login",
+     *     summary="Login a user",
+     *     tags={"Auth"},
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *
+     *         @OA\JsonContent(
+     *             required={"email","password"},
+     *
+     *             @OA\Property(property="email", type="string", format="email", example="johndoe@example.com"),
+     *             @OA\Property(property="password", type="string", format="password", example="securePassword123")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Logged in successfully",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="message", type="string", example="Logged in successfully"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="user", type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="name", type="string", example="John Doe"),
+     *                     @OA\Property(property="email", type="string", example="johndoe@example.com")
+     *                 ),
+     *                 @OA\Property(property="token", type="string", example="your-jwt-token-here")
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=422,
+     *         description="Invalid email or password"
+     *     )
+     * )
+     */
     public function login(LoginRequest $request)
     {
         $validated = $request->validated();
@@ -53,6 +125,24 @@ class AuthController extends Controller
         );
     }
 
+    /**
+     * @OA\Post(
+     *     path="/auth/logout",
+     *     summary="Logout the authenticated user",
+     *     tags={"Auth"},
+     *     security={{"sanctum": {}}},
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Logout successful",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="message", type="string", example="Logout successful")
+     *         )
+     *     )
+     * )
+     */
     public function logout()
     {
         $user = Auth::user();
