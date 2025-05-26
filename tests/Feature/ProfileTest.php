@@ -13,6 +13,7 @@ class ProfileTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private string $token;
 
     protected function setUp(): void
@@ -28,7 +29,7 @@ class ProfileTest extends TestCase
 
     public function test_user_can_view_profile()
     {
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->token)
             ->getJson('/api/user');
 
         $response->assertStatus(Response::HTTP_OK)
@@ -44,7 +45,7 @@ class ProfileTest extends TestCase
 
     public function test_user_can_update_profile()
     {
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->token)
             ->putJson('/api/user', [
                 'name' => 'Jane Doe',
                 'email' => 'jane@example.com',
@@ -68,7 +69,7 @@ class ProfileTest extends TestCase
 
     public function test_user_can_update_password()
     {
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->token)
             ->putJson('/api/user', [
                 'name' => 'John Doe',
                 'email' => 'john@example.com',
@@ -83,7 +84,7 @@ class ProfileTest extends TestCase
 
     public function test_user_cannot_update_password_with_incorrect_old_password()
     {
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->token)
             ->putJson('/api/user', [
                 'name' => 'John Doe',
                 'email' => 'john@example.com',
@@ -98,7 +99,7 @@ class ProfileTest extends TestCase
 
     public function test_user_can_delete_profile()
     {
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->token)
             ->deleteJson('/api/user');
 
         $response->assertStatus(Response::HTTP_OK)
