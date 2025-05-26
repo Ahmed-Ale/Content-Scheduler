@@ -14,7 +14,9 @@ class PlatformTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private string $token;
+
     private Platform $platform;
 
     protected function setUp(): void
@@ -24,7 +26,7 @@ class PlatformTest extends TestCase
         $this->token = $this->user->createToken('auth_token')->plainTextToken;
         $this->platform = Platform::factory()->create([
             'name' => 'Twitter',
-            'type' => 'social'
+            'type' => 'social',
         ]);
     }
 
@@ -32,7 +34,7 @@ class PlatformTest extends TestCase
     {
         Platform::factory()->create(['name' => 'Facebook', 'type' => 'social']);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->token)
             ->getJson('/api/platforms');
 
         $response->assertStatus(Response::HTTP_OK)
@@ -52,7 +54,7 @@ class PlatformTest extends TestCase
 
     public function test_user_can_toggle_platform_on()
     {
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->token)
             ->postJson('/api/platforms/toggle', [
                 'platform_id' => $this->platform->id,
                 'active' => true,
@@ -79,7 +81,7 @@ class PlatformTest extends TestCase
         // First attach the platform
         $this->user->platforms()->attach($this->platform->id);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->token)
             ->postJson('/api/platforms/toggle', [
                 'platform_id' => $this->platform->id,
                 'active' => false,
@@ -109,7 +111,7 @@ class PlatformTest extends TestCase
 
     public function test_user_cannot_toggle_invalid_platform()
     {
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->token)
             ->postJson('/api/platforms/toggle', [
                 'platform_id' => 999,
                 'active' => true,
@@ -117,12 +119,13 @@ class PlatformTest extends TestCase
 
         $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY);
     }
+
     public function test_toggle_platform_invalidates_cache()
     {
         $platform = Platform::factory()->create(['name' => 'Twitter']);
         Cache::put("user_platforms_{$this->user->id}", [], now()->addHours(1));
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->token)
             ->postJson('/api/platforms/toggle', [
                 'platform_id' => $platform->id,
                 'active' => true,
@@ -145,7 +148,7 @@ class PlatformTest extends TestCase
         ]);
 
         // Verify index reflects updated state
-        $indexResponse = $this->withHeader('Authorization', 'Bearer ' . $this->token)
+        $indexResponse = $this->withHeader('Authorization', 'Bearer '.$this->token)
             ->getJson('/api/platforms');
         $indexResponse->assertJsonFragment([
             'id' => $platform->id,
