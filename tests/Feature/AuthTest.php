@@ -73,11 +73,10 @@ class AuthTest extends TestCase
             ]);
     }
 
-
     public function test_user_cannot_register_with_existing_email()
     {
         User::factory()->create([
-            'email' => 'john@example.com'
+            'email' => 'john@example.com',
         ]);
 
         $userData = [
@@ -134,7 +133,7 @@ class AuthTest extends TestCase
         $user = User::factory()->create();
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/auth/logout');
 
         $response->assertStatus(Response::HTTP_OK);
